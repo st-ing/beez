@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+
+  mysql:
+    build: ./mysql
+    image: harbor.sting.dev/beez/beez-mysql:tst
+    ### !!! open ports only for temporarly maintenance
+    # ports:
+    #   - "3306:3306"
+
+  influxdb:
+    image: influxdb:alpine
+    environment:
+      INFLUXD_LOG_LEVEL: warn
+    ### !!! allow origin only for temporarly maintenance or development
+    # labels:
+    #   - traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*
+
+
+  portal:
+    image: harbor.sting.dev/beez/beez-portal:tst
+    environment:
+      APP_ENV: testing
+      LOGSTASH_LEVEL: INFO
+      MAIL_FROM_NAME: 'bee•z (test)'
+
+  telegraf:
+    image: telegraf:alpine
+    environment:
+      INFLUX_BUCKET: beez
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SMTP_FROM_NAME: 'bee•z (test)'
+
+  ttn:
+    build: ./ttn
+    image: harbor.sting.dev/beez/beez-ttn:tst
+    environment:
+      LOG_LEVEL: INFO
+      LOGSTASH_LEVEL: INFO
+      LOGSTASH_ENV: 'testing'
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    command:
+      - -invite-jim=false
+    #ports:
+    #  - 1025:1025 # !!! open only for temporarly maintenance
+    networks:
+      - service_net
+    environment:
+      MH_STORAGE: memory
+      #MH_UI_WEB_PATH: hog
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mailhog.rule=Host("mail-hog.${BEEZ_DOMAIN}")
+      - traefik.http.routers.mailhog.tls=true
+      - traefik.http.routers.mailhog.tls.certresolver=le
+      - traefik.http.routers.mailhog.middlewares=mailhog
+      - traefik.http.middlewares.mailhog.basicauth.users=${MAILHOG_UI_AUTH}
+      - traefik.http.services.mailhog.loadbalancer.server.port=8025
+      
+  simulation_node:
+    image: harbor.sting.dev/beez/simulation-node
+    restart: on-failure:3
+    networks:
+      - service_net
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      LOG_LEVEL: DEBUG
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_TOKEN: ${DB_TS_ADMIN_TOKEN}
+      INFLUX_ORG: 'bee•z'
+      INFLUX_BUCKET: 'beez'

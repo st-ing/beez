@@ -1,0 +1,17 @@
+logstash:
+  host: $LOGSTASH_HOST
+  username: $LOGSTASH_USERNAME
+  password: $LOGSTASH_PASSWORD
+  environment: $LOGSTASH_ENV
+
+ttn_mqtt:
+  server: $TTN_SERVER
+  port: $TTN_PORT
+  username: $TTN_APP
+  password: $TTN_KEY
+
+influx:
+  url: $INFLUX_URL
+  token: $INFLUX_TOKEN
+  org: $INFLUX_ORG
+  bucket: $INFLUX_BUCKET

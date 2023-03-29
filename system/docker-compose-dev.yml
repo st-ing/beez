@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+
+  mysql:
+    build: ./mysql
+    image: harbor.sting.dev/beez/beez-mysql:dev
+    ports:
+      - "3306:3306"
+
+  influxdb:
+    image: influxdb:alpine
+    environment:
+      INFLUXD_LOG_LEVEL: debug
+
+  portal:
+    build:
+      context: ../portal
+      dockerfile: Dockerfile.local
+    image: harbor.sting.dev/beez/beez-portal:dev
+    environment:
+      APP_ENV: 'development'
+      MAIL_FROM_NAME: 'bee•z (development)'
+      SESSION_SECURE_COOKIE: 'false'
+    ports:
+      - 80:80
+    volumes:
+      - ../portal:/var/www/html
+
+  telegraf:
+    image: telegraf:latest
+    environment:
+      INFLUX_BUCKET: beez
+
+  grafana:
+    environment:
+      GF_SMTP_ENABLED: 'false'
+      GF_SMTP_FROM_NAME: 'bee•z (development)'
+
+  ttn:
+    build: ./ttn
+    image: harbor.sting.dev/beez/beez-ttn:dev
+    environment:
+      LOG_LEVEL: DEBUG
+      LOGSTASH_ENV: 'development'
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - 1025:1025 # !!! open only for temporarly maintenance
+      - 8025:8025
+    networks:
+      - service_net

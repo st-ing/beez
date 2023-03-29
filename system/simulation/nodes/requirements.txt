@@ -1,0 +1,8 @@
+influxdb-client
+envyaml
+click
+pandas
+numpy
+scipy
+#matplotlib
+UliEngineering

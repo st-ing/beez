@@ -1,0 +1,8 @@
+.pio
+.vscode
+
+.DS_Store
+
+/to.do
+
+device-data.ini

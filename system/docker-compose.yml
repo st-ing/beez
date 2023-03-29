@@ -1,0 +1,300 @@
+version: '3.9'
+
+services:
+
+  relay:
+    image: traefik
+    command:
+      - --global.checknewversion=true
+      - --global.sendanonymoususage=false
+      - --log.level=WARN
+      - --api.dashboard=true
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+      - --providers.file.filename=/dynamic.yml
+      - --entryPoints.webinsecure.address=:80
+      - --entryPoints.webinsecure.forwardedHeaders.insecure=true
+      - --entryPoints.web.address=:443
+      - --certificatesresolvers.le.acme.email=admin@${BEEZ_DOMAIN}
+      - --certificatesresolvers.le.acme.storage=/acme/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+    restart: always
+    networks:
+      - service_net
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - volume_certificates:/acme:rw
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.http_catchall.rule=HostRegexp("{any:.+}")
+      - traefik.http.routers.http_catchall.entrypoints=webinsecure
+      - traefik.http.routers.http_catchall.middlewares=https_redirect
+      - traefik.http.middlewares.https_redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.https_redirect.redirectscheme.permanent=true
+
+      - traefik.http.routers.relay.rule=Host("relay.${BEEZ_DOMAIN}")
+      - traefik.http.routers.relay.tls=true
+      - traefik.http.routers.relay.tls.certresolver=le
+      - traefik.http.routers.relay.service=api@internal
+      - traefik.http.routers.relay.middlewares=relay
+      - traefik.http.middlewares.relay.basicauth.users=${RELAY_AUTH}
+
+  influxdb:
+    image: influxdb:alpine
+    command:
+      - --reporting-disabled
+    healthcheck:
+      test: "influx ping"
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    restart: always
+    networks:
+      - service_net
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - volume_config:/etc/influxdb2 # ?? /etc/influxdb2/config.yml
+      - volume_data_influx:/var/lib/influxdb2
+    environment:
+      # init
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${DB_TS_ADMIN_USER}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${DB_TS_ADMIN_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: 'bee•z'
+      DOCKER_INFLUXDB_INIT_BUCKET: 'beez'
+      #DOCKER_INFLUXDB_INIT_RETENTION: 1w
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${DB_TS_ADMIN_TOKEN}
+      # runtime
+      INFLUXD_LOG_LEVEL: info
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.influx.rule=Host("data.${BEEZ_DOMAIN}")
+      - traefik.http.routers.influx.tls=true
+      - traefik.http.routers.influx.tls.certresolver=le
+      - traefik.http.routers.influx.middlewares=serviceheaders
+      - traefik.http.services.influx.loadbalancer.server.port=8086
+      - traefik.http.middlewares.serviceheaders.headers.accesscontrolallowcredentials=true
+      - traefik.http.middlewares.serviceheaders.headers.accesscontrolallowheaders=*
+      - traefik.http.middlewares.serviceheaders.headers.accesscontrolallowmethods=*
+      - traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=https://beez.link.test,https://beez.link.tst.sting.dev,https://beez.link
+      - traefik.http.middlewares.serviceheaders.headers.accesscontrolmaxage=100
+      - traefik.http.middlewares.serviceheaders.headers.addvaryheader=true
+
+  mysql:
+    image: beez/beez-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: "mysql -u$$MYSQL_ROOT_USERNAME -p$$MYSQL_ROOT_PASSWORD  -e 'SHOW DATABASES;'"
+      interval: 15s
+      timeout: 15s
+      retries: 5
+    restart: always
+    networks:
+      - service_net
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - volume_data_mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_USERNAME: ${DB_RT_ROOT_USERNAME}
+      MYSQL_ROOT_PASSWORD: ${DB_RT_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_RT_DATABASE}
+      MYSQL_USER: ${DB_RT_USER}
+      MYSQL_PASSWORD: ${DB_RT_PASSWORD}
+
+      GRAFANA_DB_RT_USERNAME: ${GRAFANA_DB_RT_USERNAME}
+      GRAFANA_DB_RT_PASSWORD: ${GRAFANA_DB_RT_PASSWORD}
+    labels:
+      - traefik.enable=false
+
+  portal:
+    image: beez/beez-portal
+    restart: always
+    networks:
+      - service_net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      APP_NAME: Beez-Portal
+      APP_ENV: local
+      APP_VERSION: ${PORTAL_VERSION}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG}
+      APP_URL: ${BEEZ_DOMAIN}
+      SESSION_SECURE_COOKIE: 'true'
+      ASSET_URL: " "
+      LOG_CHANNEL: stack
+
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_RT_DATABASE}
+      DB_USERNAME: ${DB_RT_USER}
+      DB_PASSWORD: ${DB_RT_PASSWORD}
+
+      INFLUX_TOKEN: ${PORTAL_INFLUX_TOKEN}
+      INFLUX_ORG: 'bee•z'
+      INFLUX_BUCKET: 'beez'
+      INFLUX_URL: http://influxdb:8086
+
+      OPENWEATHER_API_URL: ${OPENWEATHER_API_URL}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+
+      APM_URL: ${APM_URL}
+
+      LOGSTASH_HOST: ${LOGSTASH_HOST}
+      LOGSTASH_USERNAME: ${LOGSTASH_USERNAME}
+      LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD}
+      LOGSTASH_LEVEL: DEBUG
+
+      BROADCAST_DRIVER: log
+      CACHE_DRIVER: file
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: 120
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT: ${GOOGLE_REDIRECT}
+      MAIL_MAILER: smtp
+      MAIL_HOST: ${SMTP_HOST}
+      MAIL_PORT: ${SMTP_PORT}
+      MAIL_USERNAME: ${SMTP_USERNAME}
+      MAIL_PASSWORD: ${SMTP_PASSWORD}
+      MAIL_ENCRYPTION: ''
+      MAIL_FROM_ADDRESS: 'buzz@beez.link'
+      MAIL_FROM_NAME: 'bee•z'
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.www.rule=Host("${BEEZ_DOMAIN}","api.${BEEZ_DOMAIN}")
+      - traefik.http.routers.www.tls=true
+      - traefik.http.routers.www.tls.certresolver=le
+      - traefik.http.routers.www.tls.domains[0].main=${BEEZ_DOMAIN}
+      - traefik.http.routers.www.tls.domains[0].sans=api.${BEEZ_DOMAIN}
+      - traefik.http.services.www.loadbalancer.passHostHeader=true
+      - traefik.http.services.www.loadbalancer.server.port=80
+
+  telegraf:
+    image: telegraf
+    restart: unless-stopped
+    networks:
+      - service_net
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - volume_config:/etc/telegraf
+    environment:
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_TOKEN: ${TELEGRAF_INFLUX_TOKEN}
+      INFLUX_ORG: 'bee•z'
+      INFLUX_BUCKET: 'infrastructure'
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    networks:
+      - service_net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - volume_data_grafana:/var/lib/grafana
+      - volume_config_grafana:/etc/grafana # ?? /etc/grafana/grafana.ini
+    environment:
+      GF_SERVER_DOMAIN: ${BEEZ_DOMAIN}
+      GF_SERVER_ROOT_URL: https://graph.${BEEZ_DOMAIN}
+      GF_SERVER_ENABLE_GZIP: 'true'
+
+      GF_INSTALL_PLUGINS: grafana-worldmap-panel,grafana-polystat-panel,pr0ps-trackmap-panel,marcuscalidus-svg-panel,briangann-gauge-panel,jdbranham-diagram-panel,fetzerch-sunandmoon-datasource,ryantxu-ajax-panel
+
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SECURITY_DISABLE_GRAVATAR: 'true'
+
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_NAME: 'Beez Public'
+
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+
+      GF_DATABASE_TYPE: 'mysql'
+      GF_DATABASE_HOST: mysql
+      GF_DATABASE_USER: ${GRAFANA_DB_RT_USERNAME}
+      GF_DATABASE_PASSWORD: ${GRAFANA_DB_RT_PASSWORD}
+
+      GF_SMTP_ENABLED: 'true'
+      GF_SMTP_FROM_NAME: 'bee•z'
+      GF_SMTP_FROM_ADDRESS: do-not-reply@beez.link
+      GF_SMTP_HOST: ${SMTP_HOST}:${SMTP_PORT}
+      GF_SMTP_USER: ${SMTP_USERNAME}
+      GF_SMTP_PASSWORD: ${SMTP_PASSWORD}
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.rule=Host("graph.${BEEZ_DOMAIN}")
+      - traefik.http.routers.grafana.tls=true
+      - traefik.http.routers.grafana.tls.certresolver=le
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+  ttn:
+    image: beez/ttn
+    restart: unless-stopped
+    networks:
+      - service_net
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      LOG_LEVEL: WARNING
+      LOGSTASH_HOST: ${LOGSTASH_HOST}
+      LOGSTASH_USERNAME: ${LOGSTASH_USERNAME}
+      LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD}
+      LOGSTASH_ENV: 'local'
+      LOGSTASH_LEVEL: INFO
+
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_TOKEN: ${TTN_INFLUX_TOKEN}
+      INFLUX_ORG: 'bee•z'
+      INFLUX_BUCKET: 'beez'
+
+      TTN_SERVER: ${TTN_SERVER}
+      TTN_PORT: ${TTN_PORT}
+      TTN_APP: ${TTN_BEEZ_APP}
+      TTN_KEY: ${TTN_BEEZ_KEY}
+
+volumes:
+  volume_certificates:
+  volume_config:
+  volume_data_mysql:
+  volume_data_influx:
+  volume_data_grafana:
+  volume_config_grafana:
+
+networks:
+  service_net:
+    external: false

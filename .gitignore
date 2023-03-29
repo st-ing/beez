@@ -1,1 +1,17 @@
 .DS_Store
+
+# republish scripts
+pull.sh
+push.sh
+
+# block BitBucket specifics
+gateway/bitbucket-pipelines.yml
+node/bitbucket-pipelines.yml
+portal/bitbucket-pipelines.yml
+system/bitbucket-pipelines.yml
+
+# hide system sensitive
+system/HOW-TO.md
+system/tst.env
+system/mysql/Model-Beez.mwb
+system/mysql/init/05_test_data_extra.sql
