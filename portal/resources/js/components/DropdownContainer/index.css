@@ -1,0 +1,68 @@
+
+.bootstrap-demo .dropdown-trigger {
+  border-radius: 0.25rem;
+}
+.bootstrap-demo .dropdown-trigger > span:after {
+  font-size: 12px;
+  color: #555;
+}
+.bootstrap-demo .react-dropdown-tree-select{
+  width: 100% !important;
+  text-align: center !important;
+}
+.bootstrap-demo .dropdown {
+  width: 100% !important;
+}
+.bootstrap-demo .dropdown-trigger{
+  width: 100% !important;
+}
+.bootstrap-demo .dropdown-content {
+  width: 100% !important;
+}
+
+.bootstrap-demo .partial >label > input {
+  -webkit-appearance: none;
+  background-color: #0075ff;
+  border: 1px solid #0075ff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px -15px 10px -12px rgba(0,0,0,0.05);
+  padding: 5px;
+  border-radius: 2px;
+  display: inline-block;
+  position: relative;
+}
+
+.bootstrap-demo .partial >label > input:after {
+  content: ' ';
+  width: 6px;
+  height: 10px;
+  position: absolute;
+  top: 0px;
+  left: 2px;
+  font-size: 8px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10' viewBox='0 0 4 4'%3e%3cpath stroke='%23fff' d='M0 2h4'/%3e%3c/svg%3e");
+}
+
+.bootstrap-demo .infinite-scroll-component {
+  height:250px !important;
+}
+
+.flag .node-label::before,
+.flag .tag::before {
+  content: " ";
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  background: no-repeat center;
+  background-size: 80% 80% ;
+}
+.flag.apiary .node-label::before,
+.flag.apiary .tag::before {
+  background: no-repeat center url("icons/apiary.png");
+  background-size: 80% 80% ;
+}
+.flag.beehive .node-label::before,
+.flag.beehive .tag::before {
+  background: no-repeat center url("icons/beehive.png");
+  background-size: 80% 80% ;
+}

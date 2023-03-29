@@ -11,6 +11,7 @@ portal/bitbucket-pipelines.yml
 system/bitbucket-pipelines.yml
 
 # hide system sensitive
+portal/cypress.tst.json
 system/HOW-TO.md
 system/tst.env
 system/mysql/Model-Beez.mwb

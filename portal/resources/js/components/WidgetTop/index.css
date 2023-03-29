@@ -1,0 +1,15 @@
+.card-widget-header{
+  background: #d5d6e0 !important;
+  border-radius: 100% !important;
+}
+.widget-wrapper{
+  background: #F0F0F8 !important;
+  border-radius: 6px !important;
+  border:none !important;
+}
+.widget-text-wrapper{
+  font-size: 14px;
+}
+.widget-header-wrapper{
+  font-size: 20px;
+}

@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://beez.link.test",
+  "env": {
+    "mailhog_url": "http://beez.link.test:8025",
+    "mailhog_username": "",
+    "mailhog_password": ""
+  },
+  "integrationFolder": "tests/UI/integration",
+  "fixturesFolder": "tests/UI/fixtures",
+  "pluginsFile": "tests/UI/plugins/index.js",
+  "supportFile": "tests/UI//support/commands.js",
+  "screenshotsFolder": "tests/UI/screenshots",
+  "videosFolder": "tests/UI/videos",
+  "video": false,
+  "videoUploadOnPasses": false,
+  "screenshotOnRunFailure": true,
+  "blockHosts": [
+    "www.youtube.com",
+    "apm.elastic.sting.dev"
+  ]
+}

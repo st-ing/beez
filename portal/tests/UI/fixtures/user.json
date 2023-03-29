@@ -1,0 +1,17 @@
+{
+  "name": "user.one@beez.link",
+  "password": "p@$$w0rd",
+  "email3": "user.four@beez.link",
+  "name_edited": "Edited User",
+  "address_edited": "Example Address",
+  "email_edited": "fakemailedited@mail.com",
+  "add_user_name": "NewUser",
+  "add_user_email": "fakemail@mail.com",
+  "add_user_password": "examplePassword",
+  "add_user_address": "ExampleAddress",
+  "user2": "Waldemar Bonsels",
+  "email2": "waldemar.b@beez.link",
+  "user2_edited": "Waldemar Bon",
+  "email2_edited": "wal.b@beez.link",
+  "user3": "Korisnik B"
+}

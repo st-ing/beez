@@ -1,0 +1,59 @@
+.details-card{
+  background-color: #f8f8fb;
+  border-radius: 6px;
+  border:none;
+
+}
+.details-card h4 {
+  padding-bottom: 0.8rem;
+  border-bottom: 2px solid #ebebf0;
+  color: #3D405B;
+  font-size: 16px;
+}
+.details-card h5 {
+  color: #3D405B;
+  font-size: 16px;
+}
+.details-card .details-card-text{
+  color: #3D405B;
+  font-size: 14px;
+  padding-bottom: 1rem;
+}
+.details-card .beehive-card-text{
+  color: #3D405B;
+  font-size: 14px;
+}
+.details-card .text-muted{
+  font-size: 12px;
+}
+
+.text-muted-select{
+  font-size: 10px;
+  color: #3D405B;
+  opacity: 0.4;
+  padding: 10px 0px 0px 0px;
+  margin-bottom: 1px;
+}
+.text-select{
+  font-size: 12px;
+  color: #3D405B;
+  line-height: 16px;
+  padding: 0px 0px 0px 0px;
+  border:none;
+}
+.select-card{
+  background-color: #F0F0F8;
+  border-radius: 6px;
+  border:none;
+  font-size: 12px;
+  padding: 0px 10px 10px 10px;
+  color: #3D405B;
+  cursor:pointer;
+  height: 125px;
+  width: 370px;
+}
+.select-card:hover {
+  opacity: 0.8;
+  border-color: #958BEF;
+  box-shadow: 0 0 0 0.2rem #CCC7F6;
+}

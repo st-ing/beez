@@ -1,0 +1,57 @@
+FROM php:8.1-apache
+
+
+# 1. development packages
+RUN apt-get update && apt-get install -y \
+    git \
+    zip \
+    curl \
+    sudo \
+    unzip \
+    libzip-dev \
+    libicu-dev \
+    libbz2-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libmcrypt-dev \
+    libreadline-dev \
+    libfreetype6-dev \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-install \
+    bz2 \
+    intl \
+    iconv \
+    bcmath \
+    opcache \
+    calendar \
+    pdo_mysql \
+    zip
+
+#4. xdebug
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug  \
+    && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.client_port=9001" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.mode=develop,coverage,debug,profile" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini    
+
+# 5. composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+#6. node
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash
+# and install node
+RUN apt-get -y install nodejs
+
+WORKDIR /var/www/html
+
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
+RUN sed -i -e "s/html/html\/public/g" /etc/apache2/sites-enabled/000-default.conf
+# enable apache module rewrite
+RUN a2enmod rewrite
+
+RUN chown -R www-data:www-data /var/www/html

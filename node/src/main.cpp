@@ -187,6 +187,7 @@ void setup() {
   #ifdef LORA
   LoRa.setPins(8, 4, 7);
   LoRa.setSyncWord(0xBE);
+  LoRa.enableCrc();
   LoRa.begin(866E6);
   #endif
 

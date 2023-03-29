@@ -1,0 +1,30 @@
+.apiary-tag > .tag {
+  background-color:#c4c9d0 !important;
+}
+.details-card{
+  background-color: #f8f8fb;
+  border-radius: 6px;
+  border:none;
+  color: #3D405B;
+  font-size: 14px;
+  padding-bottom: 1rem;
+}
+
+.details-card h4 {
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #ebebf0;
+  color: #3D405B;
+  font-size: 16px;
+}
+.details-card .text-muted{
+  font-size: 12px;
+}
+
+.planning-comment{
+  background-color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  color: #3D405B;
+  font-size: 14px;
+}

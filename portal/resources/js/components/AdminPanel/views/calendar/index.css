@@ -1,0 +1,24 @@
+.rbc-agenda-table .rbc-header:nth-child(2) {
+  display: none !important;
+}
+.rbc-agenda-time-cell
+{
+  display: none !important;
+}
+.rbc-overlay{
+  left: 43px !important;
+  border-radius: 10px;
+}
+.rbc-overlay > .rbc-overlay-header {
+  display: none !important;
+}
+.rbc-overlay > .rbc-event-allday {
+  display: none !important;
+}
+.rbc-overlay > .rbc-event {
+  border-radius: 0 !important;
+  border-bottom: 2px solid #F0F0F8
+}
+.rbc-show-more:hover{
+  text-decoration: none;
+}

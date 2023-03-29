@@ -1,0 +1,36 @@
+.task-items {
+  min-width: 360px;
+}
+.round {
+  border-radius: 70%;
+}
+.started{
+  background-color: rgba(45, 156, 219, 0.2);
+  border-radius: 10px;
+  color: #2D9CDB;
+}
+.canceled{
+  background-color: #fcdad7;
+  border-radius: 10px;
+  color: #EB5757;
+}
+.planned{
+  background-color: #ffecc7;;
+  border-radius: 10px;
+  color: #f0b451;
+}
+.finished{
+  background-color: #b0f5be;
+  border-radius: 10px;
+  color: #27AE60;
+}
+.acn:hover{
+  background-color: #F0F0F8;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.acn:active{
+  background-color: #F6BD60;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}

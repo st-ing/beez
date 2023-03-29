@@ -1,0 +1,31 @@
+#!/bin/bash
+
+LOCAL_IP=$(hostname -i |grep -E -oh '((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])'|head -n 1)
+
+if [ -z "$APP_ENV" ]; then
+    export APP_ENV="unknown"
+fi
+
+if [ -z "$APP_VERSION" ]; then
+    export APP_VERSION="0.0"
+fi
+
+# Remove credentials after proxy is set up
+echo "Setting APM credentials..."
+if [ ! -z "$(cat /var/www/html/resources/js/components/index.js | grep -E 'LOCAL')" ]; then
+    sed -i "/serviceName/ c\  serviceName: '$APP_ENV'," /var/www/html/resources/js/components/index.js
+    sed -i "/serverUrl/ c\  serverUrl: '$APM_URL'," /var/www/html/resources/js/components/index.js
+    sed -i "/serviceVersion/ c\  serviceVersion: '$APP_VERSION'," /var/www/html/resources/js/components/index.js
+fi
+
+# if [ ! -z "$(cat /var/www/portal/web/swagger.json | grep -E '%APP_URL%')" ]; then
+#    sed -i "s/%APP_URL%/${APP_URL}/g" /var/www/portal/web/swagger.json
+# fi
+
+echo 'Running migrations...'
+
+cd /var/www/html
+php artisan migrate --force
+
+echo 'Starting web server...'
+exec apache2-foreground

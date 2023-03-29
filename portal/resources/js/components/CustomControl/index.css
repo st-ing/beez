@@ -1,0 +1,24 @@
+.leaflet-custom-control{
+  position:absolute;
+  width:120px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  border-radius:3px;
+  color: #F6BD60;
+  background-color: #3D405B;
+}
+.leaflet-custom-control.active{
+  position:absolute;
+  width:120px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  border-radius:3px;
+  color: #3D405B;
+  background-color: #F6BD60;
+}
+.leaflet-custom-control>a{
+  cursor:pointer;
+  margin:auto;
+}
